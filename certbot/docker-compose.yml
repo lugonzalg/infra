@@ -1,0 +1,10 @@
+services:
+    certbot:
+        stdin_open: true
+        tty: true
+        container_name: certbot
+        volumes:
+            - /etc/letsencrypt:/etc/letsencrypt
+            - /var/lib/letsencrypt:/var/lib/letsencrypt
+        image: certbot/certbot
+        command: certonly
