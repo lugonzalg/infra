@@ -4,7 +4,7 @@
 
 server {
     listen 80;
-    server_name ${MINIO_API_SUBDOMAIN}
+    server_name ${MINIO_API_SUBDOMAIN};
     return 301 https://$host$request_uri;
 }
 
@@ -53,13 +53,13 @@ server {
 
 server {
     listen 80;
-    server_name ${MINIO_SUBDOMAIN}
+    server_name ${MINIO_SUBDOMAIN};
     return 301 https://$host$request_uri;
 }
 
 server {
     listen ${SSL_PORT} ssl;
-    server_name ${MINIO_SUBDOMAIN}
+    server_name ${MINIO_SUBDOMAIN};
 
     allow ${PRIVATE_WIREGUARD_ADDRESS};
     deny all;
