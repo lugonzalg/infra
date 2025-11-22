@@ -6,11 +6,19 @@ services:
       - 80
       - 443
     volumes:
-      - ./nginx:/etc/nginx/conf.d
+      - ./nginx:/etc/nginx/templates
       - /etc/letsencrypt:/etc/letsencrypt:ro
     networks:
       internal_net:
         ipv4_address: ${PRIVATE_NGINX_ADDRESS}
+    environment:
+      - PRIVATE_WIREGUARD_ADDRESS=${PRIVATE_WIREGUARD_ADDRESS}
+      - SSL_PORT=${SSL_PORT}
+      - MINIO_API_SUBDOAMIN=${MINIO_API_SUBDOMAIN}
+      - MINIO_SUBDOAMIN=${MINIO_SUBDOMAIN}
+      - VAULTWARDEN_SUBDOAMIN=${VAULTWARDEN_SUBDOMAIN}
+      - CERT_PATH=${CERT_PATH}
+      - KEY_PATH=${KEY_PATH}
     depends_on:
       - vaultwarden
 

@@ -1,16 +1,22 @@
 ############################################################
-# API: s3-api.ikerketa.com → MinIO API (9000)
+# API: → MinIO API
 ############################################################
 
 server {
-    listen 443 ssl http2;
-    server_name s3-api.ikerketa.com;
+    listen 80;
+    server_name ${MINIO_API_SUBDOMAIN}
+    return 301 https://$host$request_uri;
+}
 
-    allow 172.18.0.0/24;
+server {
+    listen ${SSL_PORT} ssl;
+    server_name ${MINIO_API_SUBDOMAIN};
+
+    allow ${PRIVATE_WIREGUARD_ADDRESS};
     deny all;
 
-    ssl_certificate     /etc/letsencrypt/live/ikerketa.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/ikerketa.com/privkey.pem;
+    ssl_certificate     ${CERT_PATH}
+    ssl_certificate_key ${KEY_PATH}
 
     proxy_buffering off;
 
@@ -41,21 +47,25 @@ server {
     }
 }
 
-
-
 ############################################################
-# Console: s3.ikerketa.com → MinIO Console (9001)
+# Console: → MinIO Console
 ############################################################
 
 server {
-    listen 443 ssl http2;
-    server_name s3.ikerketa.com;
+    listen 80;
+    server_name ${MINIO_SUBDOMAIN}
+    return 301 https://$host$request_uri;
+}
 
-    allow 172.18.0.0/24;
+server {
+    listen ${SSL_PORT} ssl;
+    server_name ${MINIO_SUBDOMAIN}
+
+    allow ${PRIVATE_WIREGUARD_ADDRESS};
     deny all;
 
-    ssl_certificate     /etc/letsencrypt/live/ikerketa.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/ikerketa.com/privkey.pem;
+    ssl_certificate     ${CERT_PATH}
+    ssl_certificate_key ${KEY_PATH}
 
     proxy_buffering off;
 
