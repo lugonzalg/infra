@@ -2,17 +2,20 @@ services:
   nginx:
     image: nginx:1.29.3-trixie-perl
     restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
+    expose:
+      - 80
+      - 443
     volumes:
       - ./nginx:/etc/nginx/conf.d
       - /etc/letsencrypt:/etc/letsencrypt:ro
+    networks:
+      internal_net:
+        ipv4_address: ${PRIVATE_NGINX_ADDRESS}
     depends_on:
       - vaultwarden
 
   vaultwarden:
-    image: vaultwarden/server:latest
+    image: vaultwarden/server:testing
     restart: unless-stopped
     environment:
       DOMAIN: "https://vw.ikerketa.com"
@@ -25,6 +28,9 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       SMTP_FROM: ${SMTP_FROM}
       SMTP_FROM_NAME: ${SMTP_FROM_NAME}
+    networks:
+      internal_net:
+        ipv4_address: ${PRIVATE_VAULTWARDEN_ADDRESS}
     volumes:
       - ./vaultwarden/vw-data/:/data/
 
@@ -38,22 +44,28 @@ services:
       MINIO_SERVER_URL: https://s3-api.ikerketa.com
       MINIO_BROWSER_REDIRECT_URL: https://s3.ikerketa.com
       MINIO_BROWSER_ENABLE_LICENSING: off
+    networks:
+      internal_net:
+        ipv4_address: ${PRIVATE_MINIO_ADDRESS}
     command: server /mnt/minio --console-address ":9001"
 
   wireguard:
     image: lscr.io/linuxserver/wireguard:latest
-    container_name: wireguard
     cap_add:
       - NET_ADMIN
       - SYS_MODULE #optional
+    networks:
+      internal_net:
+        ipv4_address: ${PRIVATE_WIREGUARD_ADDRESS}
     environment:
+      - PRIVATE_COREDNS_ADDRESS=${PRIVATE_COREDNS_ADDRESS}
       - PUID=1000
       - PGID=1000
       - TZ=Etc/UTC
       - SERVERURL=vpn.ikerketa.com #optional
       - SERVERPORT=51820 #optional
       - PEERS=2 #optional
-      - PEERDNS=auto #optional
+      - PEERDNS=${PRIVATE_COREDNS_ADDRESS}
       - INTERNAL_SUBNET=10.42.24.0 #optional
       - ALLOWEDIPS=0.0.0.0/0 #optional
       - LOG_CONFS=true #optional
@@ -65,3 +77,22 @@ services:
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
     restart: unless-stopped
+
+  coredns:
+    image: coredns/coredns:1.13.1
+    restart: unless-stopped
+    environment:
+      - PRIVATE_NGINX_ADDRESS=${PRIVATE_NGINX_ADDRESS}
+    networks:
+      internal_net:
+        ipv4_address: ${PRIVATE_COREDNS_ADDRESS}
+    volumes:
+      - ./coredns/Corefile:/etc/coredns/Corefile:ro
+    command: -conf /etc/coredns/Corefile
+  
+networks:
+  internal_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${PRIVATE_NETWORK_ADDRESS}

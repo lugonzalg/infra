@@ -1,0 +1,9 @@
+.:53 {
+    hosts {
+        {$PRIVATE_NGINX_ADDRESS} vw.ikerketa.com s3.ikerketa.com s3-api.ikerketa.com
+        fallthrough
+    }
+    forward . 1.1.1.1 8.8.8.8
+    log
+    errors
+}
