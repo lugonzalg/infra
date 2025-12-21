@@ -1,0 +1,28 @@
+services:
+
+  nginx:
+    image: nginx:1.29.3-trixie-perl
+    container_name: nginx
+    volumes:
+      - ./conf:/etc/nginx/templates:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    expose:
+      - 80
+      - 443
+    environment:
+      - PRIVATE_WIREGUARD_ADDRESS=${PRIVATE_WIREGUARD_ADDRESS}
+      - SSL_PORT=${SSL_PORT}
+      - ZITADEL_SUBDOMAIN=${ZITADEL_SUBDOMAIN}
+      - MINIO_API_SUBDOMAIN=${MINIO_API_SUBDOMAIN}
+      - MINIO_SUBDOMAIN=${MINIO_SUBDOMAIN}
+      - VAULT_SUBDOMAIN=${VAULT_SUBDOMAIN}
+      - LOCAL_CERT_PATH=${LOCAL_CERT_PATH}
+      - LOCAL_KEY_PATH=${LOCAL_KEY_PATH}
+    networks:
+      vpn:
+        ipv4_address: ${PRIVATE_NGINX_ADDRESS}
+    restart: unless-stopped
+
+networks:
+  vpn:
+    external: true
