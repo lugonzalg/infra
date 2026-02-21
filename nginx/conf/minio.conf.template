@@ -12,11 +12,12 @@ server {
     listen ${SSL_PORT} ssl;
     server_name ${MINIO_API_SUBDOMAIN};
 
-    allow ${PRIVATE_WIREGUARD_ADDRESS};
-    deny all;
+    # allow ${PRIVATE_WIREGUARD_ADDRESS};
+    # deny all;
 
     ssl_certificate     ${LOCAL_CERT_PATH};
     ssl_certificate_key ${LOCAL_KEY_PATH};
+    client_max_body_size 100M;
 
     proxy_buffering off;
 
@@ -61,8 +62,8 @@ server {
     listen ${SSL_PORT} ssl;
     server_name ${MINIO_SUBDOMAIN};
 
-    allow ${PRIVATE_WIREGUARD_ADDRESS};
-    deny all;
+    # allow ${PRIVATE_WIREGUARD_ADDRESS};
+    # deny all;
 
     ssl_certificate     ${LOCAL_CERT_PATH};
     ssl_certificate_key ${LOCAL_KEY_PATH};

@@ -2,7 +2,7 @@ services:
 
   nginx:
     image: nginx:1.29.3-trixie-perl
-    container_name: nginx
+    container_name: sec_nginx
     volumes:
       - ./conf:/etc/nginx/templates:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
