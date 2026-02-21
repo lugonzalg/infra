@@ -2,3 +2,7 @@
 data
 vw-data
 wireguard
+volume
+certs
+.keys.txt
+conf

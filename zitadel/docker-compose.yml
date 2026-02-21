@@ -1,0 +1,104 @@
+services:
+
+  zitadel:
+    extends:
+      service: zitadel-init
+    container_name: zitadel
+    command: "start-from-setup --masterkey ${MASTER_KEY}"
+    environment:
+      ZITADEL_EXTERNALPORT: 443
+      ZITADEL_EXTERNALSECURE: true
+      ZITADEL_TLS_ENABLED: false
+      MASTER_KEY: ${MASTER_KEY}
+    networks:
+      vpn:
+        ipv4_address: ${PRIVATE_ZITADEL_ADDRESS}
+      postgres:
+    depends_on:
+      postgres:
+        condition: 'service_healthy'
+      zitadel-init:
+        condition: 'service_completed_successfully'
+    expose:
+      - 8080
+
+  zitadel-init:
+    image: ghcr.io/zitadel/zitadel:v4.7.5
+    command: 'init'
+    depends_on:
+      postgres:
+        condition: 'service_healthy'
+    environment:
+      ZITADEL_EXTERNALDOMAIN: ${SSO_SUBDOMAIN}
+      ZITADEL_LOGSTORE_ACCESS_STDOUT_ENABLED: true
+      ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORDCHANGEREQUIRED: false
+
+      ZITADEL_DATABASE_POSTGRES_HOST: ${DB_HOST}
+      ZITADEL_DATABASE_POSTGRES_ADMIN_USERNAME: ${DB_USER}
+      ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD: ${DB_PASSWORD}
+      ZITADEL_DATABASE_POSTGRES_USER_USERNAME: ${SSO_DB_USER}
+      ZITADEL_DATABASE_POSTGRES_USER_PASSWORD: ${SSO_DB_PASSWORD}
+
+      ZITADEL_FIRSTINSTANCE_ORG_NAME: ${ORG_NAME}
+      ZITADEL_FIRSTINSTANCE_ORG_HUMAN_USERNAME: ${USERNAME}
+      ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORD: ${PASSWORD}
+      
+      ZITADEL_FIRSTINSTANCE_LOGINCLIENTPATPATH: /current-dir/login-client.pat
+      ZITADEL_FIRSTINSTANCE_ORG_LOGINCLIENT_MACHINE_USERNAME: ${ZITADEL_FIRSTINSTANCE_ORG_LOGINCLIENT_MACHINE_USERNAME}
+      ZITADEL_FIRSTINSTANCE_ORG_LOGINCLIENT_MACHINE_NAME: ${ZITADEL_FIRSTINSTANCE_ORG_LOGINCLIENT_MACHINE_NAME}
+      ZITADEL_FIRSTINSTANCE_ORG_LOGINCLIENT_PAT_EXPIRATIONDATE: ${ZITADEL_FIRSTINSTANCE_ORG_LOGINCLIENT_PAT_EXPIRATIONDATE}
+    networks:
+      - postgres
+    healthcheck:
+      test: [ "CMD", "/app/zitadel", "ready" ]
+      interval: '10s'
+      timeout: '5s'
+      retries: 5
+      start_period: '10s'
+    volumes:
+      - ./volume:/current-dir:rw
+
+  postgres:
+    restart: 'always'
+    container_name: postgres
+    image: postgres:17-alpine
+    environment:
+      PGUSER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 5s
+      timeout: 60s
+      retries: 10
+      start_period: 5s
+    networks:
+      - postgres
+    volumes:
+      - db_data:/var/lib/postgresql/data:rw
+
+  login:
+    restart: 'unless-stopped'
+    container_name: zitadel-login
+    image: ghcr.io/zitadel/zitadel-login:v4.7.5
+    environment:
+      - ZITADEL_API_URL=http://zitadel:8080
+      - NEXT_PUBLIC_BASE_PATH=/ui/v2/login
+      - ZITADEL_SERVICE_USER_TOKEN_FILE=/current-dir/login-client.pat
+      - CUSTOM_REQUEST_HEADERS=Host:${SSO_SUBDOMAIN}
+    volumes:
+      - ./volume:/current-dir:ro
+    networks:
+      vpn:
+        ipv4_address: ${PRIVATE_ZITADEL_LOGIN_ADDRESS}
+    depends_on:
+      zitadel:
+        condition: 'service_healthy'
+
+
+networks:
+  vpn:
+    external: true
+  postgres:
+
+volumes:
+  db_data:
