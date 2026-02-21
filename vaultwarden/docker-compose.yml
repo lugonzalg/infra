@@ -1,0 +1,35 @@
+services:
+
+  vaultwarden:
+    image: vaultwarden/server:testing
+    container_name: vaultwarden
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${VAULT_SUBDOMAIN}
+      SIGNUPS_ALLOWED: false
+      ADMIN_TOKEN: ${ADMIN_TOKEN}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_SECURITY: ${SMTP_SECURITY}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM: ${SMTP_FROM}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME}
+      SSO_ENABLED: ${SSO_ENABLED}
+      SSO_AUTHORITY: ${SSO_AUTHORITY}
+      SSO_CLIENT_ID: ${SSO_CLIENT_ID}
+      SSO_CLIENT_SECRET: ${SSO_CLIENT_SECRET}
+      SSO_SCOPES: ${SSO_SCOPES}
+      SSO_AUDIENCE_TRUSTED: ${SSO_AUDIENCE_TRUSTED}
+      SSO_ALLOW_UNKNOWN_EMAIL_VERIFICATION: ${SSO_ALLOW_UNKNOWN_EMAIL_VERIFICATION}
+    dns:
+      - ${PRIVATE_COREDNS_ADDRESS}
+    networks:
+      vpn:
+        ipv4_address: ${PRIVATE_VAULTWARDEN_ADDRESS}
+    volumes:
+      - ./vw-data/:/data/
+
+networks:
+  vpn:
+    external: true

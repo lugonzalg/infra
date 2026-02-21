@@ -1,0 +1,20 @@
+services:
+  openbao:
+    image: openbao/openbao:2.4.4
+    container_name: openbao
+    mem_swappiness: 0
+    volumes:
+      - ./config:/openbao/config
+      - /openbao/logs:/openbao/logs
+      - ./data:/data
+      - ./certs:/certs:ro
+    ports:
+      - 8200:8200
+    networks:
+      vpn:
+        ipv4_address: ${PRIVATE_OPENBAO_ADDRESS}
+    command: server
+
+networks:
+  vpn:
+    external: true

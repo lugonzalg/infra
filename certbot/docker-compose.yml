@@ -1,10 +1,19 @@
 services:
-    certbot:
-        stdin_open: true
-        tty: true
-        container_name: certbot
-        volumes:
-            - /etc/letsencrypt:/etc/letsencrypt
-            - /var/lib/letsencrypt:/var/lib/letsencrypt
-        image: certbot/certbot
-        command: certonly
+  certbot:
+    image: certbot-hetzner
+    container_name: certbot
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt
+      - /var/lib/letsencrypt:/var/lib/letsencrypt
+      - ./conf:/conf
+    env_file:
+      - .env
+    command: >
+      certonly 
+        --manual 
+        --preferred-challenges=dns 
+        --manual-auth-hook /scripts/auth.sh 
+        --manual-cleanup-hook /scripts/cleanup.sh 
+        -d ${DOMAIN} 
+        -d *.${DOMAIN} 
+        -vv
