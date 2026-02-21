@@ -5,3 +5,4 @@ wireguard
 volume
 certs
 .keys.txt
+conf
